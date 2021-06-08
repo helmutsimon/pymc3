@@ -2262,7 +2262,6 @@ class TestMatchesScipy:
         assert_allclose(sample, np.stack([vals, vals], axis=0))
 
     @pytest.mark.parametrize("n", [2, 3])
-    @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_dirichlet_multinomial(self, n):
         self.check_logp(
             DirichletMultinomial,
@@ -2271,7 +2270,6 @@ class TestMatchesScipy:
             dirichlet_multinomial_logpmf,
         )
 
-    @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_dirichlet_multinomial_matches_beta_binomial(self):
         a, b, n = 2, 1, 5
         ns = np.arange(n + 1)
@@ -2287,7 +2285,6 @@ class TestMatchesScipy:
             decimal=select_by_precision(float64=6, float32=3),
         )
 
-    @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_dirichlet_multinomial_vec(self):
         vals = np.array([[2, 4, 4], [3, 3, 4]])
         a = np.array([0.2, 0.3, 0.5])
@@ -2317,7 +2314,6 @@ class TestMatchesScipy:
             decimal=4,
         )
 
-    @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_dirichlet_multinomial_vec_1d_n(self):
         vals = np.array([[2, 4, 4], [4, 3, 4]])
         a = np.array([0.2, 0.3, 0.5])
@@ -2332,7 +2328,6 @@ class TestMatchesScipy:
             decimal=4,
         )
 
-    @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_dirichlet_multinomial_vec_1d_n_2d_a(self):
         vals = np.array([[2, 4, 4], [4, 3, 4]])
         as_ = np.array([[0.2, 0.3, 0.5], [0.9, 0.09, 0.01]])
@@ -2347,7 +2342,6 @@ class TestMatchesScipy:
             decimal=4,
         )
 
-    @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_dirichlet_multinomial_vec_2d_a(self):
         vals = np.array([[2, 4, 4], [3, 3, 4]])
         as_ = np.array([[0.2, 0.3, 0.5], [0.3, 0.3, 0.4]])
