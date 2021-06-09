@@ -559,7 +559,6 @@ class DirichletMultinomialRV(RandomVariable):
             for idx in np.ndindex(a.shape[:-1]):
                 p = rng.dirichlet(a[idx])
                 res[idx] = rng.multinomial(n[idx], p)
-            return res
         else:
             # n is a scalar, a is a 1d array
             p = rng.dirichlet(a, size=size)  # (size, a.shape)
@@ -568,7 +567,7 @@ class DirichletMultinomialRV(RandomVariable):
             for idx in np.ndindex(p.shape[:-1]):
                 res[idx] = rng.multinomial(n, p[idx])
 
-            return res
+        return res
 
 
 dirichlet_multinomial = DirichletMultinomialRV()
@@ -647,6 +646,29 @@ class DirichletMultinomial(Discrete):
 
     def _distr_parameters_for_repr(self):
         return ["n", "a"]
+
+
+class OrderedMultinomial(Multinomial):
+    rv_op = multinomial
+
+    @classmethod
+    def dist(cls, eta, cutpoints, n, *args, **kwargs):
+        eta = at.as_tensor_variable(floatX(eta))
+        cutpoints = at.as_tensor_variable(cutpoints)
+        n = at.as_tensor_variable(n)
+
+        pa = sigmoid(cutpoints - at.shape_padright(eta))
+        p_cum = at.concatenate(
+            [
+                at.zeros_like(at.shape_padright(pa[..., 0])),
+                pa,
+                at.ones_like(at.shape_padright(pa[..., 0])),
+            ],
+            axis=-1,
+        )
+        p = p_cum[..., 1:] - p_cum[..., :-1]
+
+        return super().dist([n, p], *args, **kwargs)
 
 
 def posdef(AA):
