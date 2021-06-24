@@ -28,7 +28,12 @@ from aesara.graph.basic import Apply
 from aesara.graph.op import Op
 from aesara.tensor import gammaln
 from aesara.tensor.nlinalg import det, eigh, matrix_inverse, trace
-from aesara.tensor.random.basic import MultinomialRV, dirichlet, multivariate_normal, RandomVariable
+from aesara.tensor.random.basic import (
+    MultinomialRV,
+    RandomVariable,
+    dirichlet,
+    multivariate_normal,
+)
 from aesara.tensor.random.op import default_shape_from_params
 from aesara.tensor.random.utils import broadcast_params
 from aesara.tensor.slinalg import (
@@ -48,7 +53,7 @@ from pymc3.distributions.continuous import ChiSquared, Normal, assert_negative_s
 from pymc3.distributions.dist_math import bound, factln, logpow, multigammaln
 from pymc3.distributions.distribution import Continuous, Discrete
 from pymc3.distributions.special import gammaln, multigammaln
-from pymc3.math import kron_diag, kron_dot
+from pymc3.math import kron_diag, kron_dot, kron_solve_lower, kronecker
 
 __all__ = [
     "MvNormal",
@@ -538,9 +543,7 @@ class DirichletMultinomialRV(RandomVariable):
     _print_name = ("DirichletMN", "\\operatorname{DirichletMN}")
 
     def _shape_from_params(self, dist_params, rep_param_idx=1, param_shapes=None):
-        return default_shape_from_params(
-            self.ndim_supp, dist_params, rep_param_idx, param_shapes
-        )
+        return default_shape_from_params(self.ndim_supp, dist_params, rep_param_idx, param_shapes)
 
     @classmethod
     def rng_fn(cls, rng, n, a, size):
@@ -627,10 +630,18 @@ class DirichletMultinomial(Discrete):
         -------
         TensorVariable
         """
+        n = intX(n)
+        a = floatX(a)
+        if value.ndim >= 1:
+            n = at.shape_padright(n)
+            if a.ndim > 1:
+                a = at.shape_padleft(a)
+
         sum_a = a.sum(axis=-1, keepdims=True)
         const = (gammaln(n + 1) + gammaln(sum_a)) - gammaln(n + sum_a)
         series = gammaln(value + a) - (gammaln(value + 1) + gammaln(a))
         result = const + series.sum(axis=-1, keepdims=True)
+
         # Bounds checking to confirm parameters and data meet all constraints
         # and that each observation value_i sums to n_i.
         return bound(
@@ -809,7 +820,7 @@ class Wishart(Continuous):
 
 
 def WishartBartlett(name, S, nu, is_cholesky=False, return_cholesky=False, initval=None):
-    R"""
+    r"""
     Bartlett decomposition of the Wishart distribution. As the Wishart
     distribution requires the matrix to be symmetric positive semi-definite
     it is impossible for MCMC to ever propose acceptable matrices.
@@ -1390,12 +1401,7 @@ class LKJCorr(Continuous):
         result = _lkj_normalizing_constant(eta, n)
         result += (eta - 1.0) * at.log(det(X))
         return bound(
-            result,
-            X >= -1,
-            X <= 1,
-            matrix_pos_def(X),
-            eta > 0,
-            broadcast_conditions=False,
+            result, X >= -1, X <= 1, matrix_pos_def(X), eta > 0, broadcast_conditions=False
         )
 
     def _distr_parameters_for_repr(self):
