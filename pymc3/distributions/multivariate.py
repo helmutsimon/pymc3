@@ -629,10 +629,18 @@ class DirichletMultinomial(Discrete):
         -------
         TensorVariable
         """
+        n = intX(n)
+        a = floatX(a)
+        if value.ndim >= 1:
+            n = at.shape_padright(n)
+            if a.ndim > 1:
+                a = at.shape_padleft(a)
+
         sum_a = a.sum(axis=-1, keepdims=True)
         const = (gammaln(n + 1) + gammaln(sum_a)) - gammaln(n + sum_a)
         series = gammaln(value + a) - (gammaln(value + 1) + gammaln(a))
         result = const + series.sum(axis=-1, keepdims=True)
+
         # Bounds checking to confirm parameters and data meet all constraints
         # and that each observation value_i sums to n_i.
         return bound(
@@ -811,7 +819,7 @@ class Wishart(Continuous):
 
 
 def WishartBartlett(name, S, nu, is_cholesky=False, return_cholesky=False, initval=None):
-    R"""
+    r"""
     Bartlett decomposition of the Wishart distribution. As the Wishart
     distribution requires the matrix to be symmetric positive semi-definite
     it is impossible for MCMC to ever propose acceptable matrices.
@@ -1392,12 +1400,7 @@ class LKJCorr(Continuous):
         result = _lkj_normalizing_constant(eta, n)
         result += (eta - 1.0) * at.log(det(X))
         return bound(
-            result,
-            X >= -1,
-            X <= 1,
-            matrix_pos_def(X),
-            eta > 0,
-            broadcast_conditions=False,
+            result, X >= -1, X <= 1, matrix_pos_def(X), eta > 0, broadcast_conditions=False
         )
 
     def _distr_parameters_for_repr(self):
