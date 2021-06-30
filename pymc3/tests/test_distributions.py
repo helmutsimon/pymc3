@@ -2259,7 +2259,6 @@ class TestMatchesScipy:
         sample = dist.eval()
         assert_allclose(sample, np.stack([vals, vals], axis=0))
 
-# https://github.com/pymc-devs/pymc3/pull/4508/files
     @pytest.mark.parametrize("n", [2, 3])
     def test_dirichlet_multinomial(self, n):
         self.check_logp(
