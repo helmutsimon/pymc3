@@ -166,10 +166,7 @@ class Domain:
             )
         except TypeError:
             return Domain(
-                [v * other for v in self.vals],
-                self.dtype,
-                (self.lower, self.upper),
-                self.shape,
+                [v * other for v in self.vals], self.dtype, (self.lower, self.upper), self.shape
             )
 
     def __neg__(self):
@@ -231,11 +228,7 @@ def build_model(distfam, valuedomain, vardomains, extra_args=None):
             v_at.name = v
             param_vars[v] = v_at
         param_vars.update(extra_args)
-        distfam(
-            "value",
-            **param_vars,
-            transform=None,
-        )
+        distfam("value", **param_vars, transform=None)
     return m, param_vars
 
 
@@ -656,10 +649,7 @@ class TestMatchesScipy:
             pt_logp = Point(pt_d, model=model)
             pt_ref = Point(pt, filter_model_vars=False, model=model)
             assert_almost_equal(
-                logp(pt_logp),
-                logp_reference(pt_ref),
-                decimal=decimal,
-                err_msg=str(pt),
+                logp(pt_logp), logp_reference(pt_ref), decimal=decimal, err_msg=str(pt)
             )
 
     def _model_input_dict(self, model, param_vars, pt):
@@ -764,10 +754,7 @@ class TestMatchesScipy:
                 params["value"] = value  # for displaying in err_msg
                 with aesara.config.change_flags(on_opt_error="raise", mode=Mode("py")):
                     assert_almost_equal(
-                        logcdf(dist, value).eval(),
-                        scipy_cdf,
-                        decimal=decimal,
-                        err_msg=str(params),
+                        logcdf(dist, value).eval(), scipy_cdf, decimal=decimal, err_msg=str(params)
                     )
 
         valid_value = domain.vals[0]
@@ -811,20 +798,14 @@ class TestMatchesScipy:
             below_domain = domain.lower - 1
             with aesara.config.change_flags(mode=Mode("py")):
                 assert_equal(
-                    logcdf(valid_dist, below_domain).eval(),
-                    -np.inf,
-                    err_msg=str(below_domain),
+                    logcdf(valid_dist, below_domain).eval(), -np.inf, err_msg=str(below_domain)
                 )
 
         # Test that values above domain edge evaluate to 0
         if domain not in nat_domains and np.isfinite(domain.upper):
             above_domain = domain.upper + 1
             with aesara.config.change_flags(mode=Mode("py")):
-                assert_equal(
-                    logcdf(valid_dist, above_domain).eval(),
-                    0,
-                    err_msg=str(above_domain),
-                )
+                assert_equal(logcdf(valid_dist, above_domain).eval(), 0, err_msg=str(above_domain))
 
         # Test that method works with multiple values or raises informative TypeError
         valid_dist = change_rv_size(valid_dist, 2)
@@ -971,9 +952,7 @@ class TestMatchesScipy:
             skip_paramdomain_outside_edge_test=True,
         )
         self.check_selfconsistency_discrete_logcdf(
-            DiscreteUniform,
-            Rdunif,
-            {"lower": -Rplusdunif, "upper": Rplusdunif},
+            DiscreteUniform, Rdunif, {"lower": -Rplusdunif, "upper": Rplusdunif}
         )
         # Custom logp / logcdf check for invalid parameters
         invalid_dist = DiscreteUniform.dist(lower=1, upper=0)
@@ -1149,18 +1128,8 @@ class TestMatchesScipy:
         def scipy_log_cdf(value, a, b):
             return pm.math.log1mexp_numpy(-(b * np.log1p(-(value ** a))))
 
-        self.check_logp(
-            Kumaraswamy,
-            Unit,
-            {"a": Rplus, "b": Rplus},
-            scipy_log_pdf,
-        )
-        self.check_logcdf(
-            Kumaraswamy,
-            Unit,
-            {"a": Rplus, "b": Rplus},
-            scipy_log_cdf,
-        )
+        self.check_logp(Kumaraswamy, Unit, {"a": Rplus, "b": Rplus}, scipy_log_pdf)
+        self.check_logcdf(Kumaraswamy, Unit, {"a": Rplus, "b": Rplus}, scipy_log_cdf)
 
     def test_exponential(self):
         self.check_logp(
@@ -1177,23 +1146,9 @@ class TestMatchesScipy:
         )
 
     def test_geometric(self):
-        self.check_logp(
-            Geometric,
-            Nat,
-            {"p": Unit},
-            lambda value, p: np.log(sp.geom.pmf(value, p)),
-        )
-        self.check_logcdf(
-            Geometric,
-            Nat,
-            {"p": Unit},
-            lambda value, p: sp.geom.logcdf(value, p),
-        )
-        self.check_selfconsistency_discrete_logcdf(
-            Geometric,
-            Nat,
-            {"p": Unit},
-        )
+        self.check_logp(Geometric, Nat, {"p": Unit}, lambda value, p: np.log(sp.geom.pmf(value, p)))
+        self.check_logcdf(Geometric, Nat, {"p": Unit}, lambda value, p: sp.geom.logcdf(value, p))
+        self.check_selfconsistency_discrete_logcdf(Geometric, Nat, {"p": Unit})
 
     def test_hypergeometric(self):
         def modified_scipy_hypergeom_logpmf(value, N, k, n):
@@ -1241,12 +1196,7 @@ class TestMatchesScipy:
         def scipy_mu_alpha_logcdf(value, mu, alpha):
             return sp.nbinom.logcdf(value, alpha, 1 - mu / (mu + alpha))
 
-        self.check_logp(
-            NegativeBinomial,
-            Nat,
-            {"mu": Rplus, "alpha": Rplus},
-            scipy_mu_alpha_logpmf,
-        )
+        self.check_logp(NegativeBinomial, Nat, {"mu": Rplus, "alpha": Rplus}, scipy_mu_alpha_logpmf)
         self.check_logp(
             NegativeBinomial,
             Nat,
@@ -1254,11 +1204,7 @@ class TestMatchesScipy:
             lambda value, p, n: sp.nbinom.logpmf(value, n, p),
         )
         self.check_logcdf(
-            NegativeBinomial,
-            Nat,
-            {"mu": Rplus, "alpha": Rplus},
-            scipy_mu_alpha_logcdf,
-            n_samples=5,
+            NegativeBinomial, Nat, {"mu": Rplus, "alpha": Rplus}, scipy_mu_alpha_logcdf, n_samples=5
         )
         self.check_logcdf(
             NegativeBinomial,
@@ -1268,10 +1214,7 @@ class TestMatchesScipy:
             n_samples=5,
         )
         self.check_selfconsistency_discrete_logcdf(
-            NegativeBinomial,
-            Nat,
-            {"mu": Rplus, "alpha": Rplus},
-            n_samples=10,
+            NegativeBinomial, Nat, {"mu": Rplus, "alpha": Rplus}, n_samples=10
         )
 
     @pytest.mark.parametrize(
@@ -1296,16 +1239,10 @@ class TestMatchesScipy:
 
     def test_laplace(self):
         self.check_logp(
-            Laplace,
-            R,
-            {"mu": R, "b": Rplus},
-            lambda value, mu, b: sp.laplace.logpdf(value, mu, b),
+            Laplace, R, {"mu": R, "b": Rplus}, lambda value, mu, b: sp.laplace.logpdf(value, mu, b)
         )
         self.check_logcdf(
-            Laplace,
-            R,
-            {"mu": R, "b": Rplus},
-            lambda value, mu, b: sp.laplace.logcdf(value, mu, b),
+            Laplace, R, {"mu": R, "b": Rplus}, lambda value, mu, b: sp.laplace.logcdf(value, mu, b)
         )
 
     def test_laplace_asymmetric(self):
@@ -1416,12 +1353,7 @@ class TestMatchesScipy:
         def test_fun(value, mu, sigma):
             return sp.gamma.logpdf(value, mu ** 2 / sigma ** 2, scale=1.0 / (mu / sigma ** 2))
 
-        self.check_logp(
-            Gamma,
-            Rplus,
-            {"mu": Rplusbig, "sigma": Rplusbig},
-            test_fun,
-        )
+        self.check_logp(Gamma, Rplus, {"mu": Rplusbig, "sigma": Rplusbig}, test_fun)
 
     @pytest.mark.xfail(
         condition=(aesara.config.floatX == "float32"),
@@ -1509,8 +1441,7 @@ class TestMatchesScipy:
         )
 
     @pytest.mark.xfail(
-        condition=(aesara.config.floatX == "float32"),
-        reason="Fails on float32 due to inf issues",
+        condition=(aesara.config.floatX == "float32"), reason="Fails on float32 due to inf issues"
     )
     def test_weibull_logcdf(self):
         self.check_logcdf(
@@ -1553,20 +1484,13 @@ class TestMatchesScipy:
             n_samples=10,
         )
         self.check_selfconsistency_discrete_logcdf(
-            Binomial,
-            Nat,
-            {"n": NatSmall, "p": Unit},
-            n_samples=10,
+            Binomial, Nat, {"n": NatSmall, "p": Unit}, n_samples=10
         )
 
     @pytest.mark.xfail(reason="checkd tests has not been refactored")
     @pytest.mark.xfail(condition=(aesara.config.floatX == "float32"), reason="Fails on float32")
     def test_beta_binomial_distribution(self):
-        self.checkd(
-            BetaBinomial,
-            Nat,
-            {"alpha": Rplus, "beta": Rplus, "n": NatSmall},
-        )
+        self.checkd(BetaBinomial, Nat, {"alpha": Rplus, "beta": Rplus, "n": NatSmall})
 
     @pytest.mark.skipif(
         condition=(SCIPY_VERSION < parse("1.4.0")), reason="betabinom is new in Scipy 1.4.0"
@@ -1592,9 +1516,7 @@ class TestMatchesScipy:
 
     def test_beta_binomial_selfconsistency(self):
         self.check_selfconsistency_discrete_logcdf(
-            BetaBinomial,
-            Nat,
-            {"alpha": Rplus, "beta": Rplus, "n": NatSmall},
+            BetaBinomial, Nat, {"alpha": Rplus, "beta": Rplus, "n": NatSmall}
         )
 
     @pytest.mark.xfail(reason="Bernoulli logit_p not refactored yet")
@@ -1614,63 +1536,33 @@ class TestMatchesScipy:
 
     def test_bernoulli(self):
         self.check_logp(
-            Bernoulli,
-            Bool,
-            {"p": Unit},
-            lambda value, p: sp.bernoulli.logpmf(value, p),
+            Bernoulli, Bool, {"p": Unit}, lambda value, p: sp.bernoulli.logpmf(value, p)
         )
         self.check_logcdf(
-            Bernoulli,
-            Bool,
-            {"p": Unit},
-            lambda value, p: sp.bernoulli.logcdf(value, p),
+            Bernoulli, Bool, {"p": Unit}, lambda value, p: sp.bernoulli.logcdf(value, p)
         )
-        self.check_selfconsistency_discrete_logcdf(
-            Bernoulli,
-            Bool,
-            {"p": Unit},
-        )
+        self.check_selfconsistency_discrete_logcdf(Bernoulli, Bool, {"p": Unit})
 
     def test_discrete_weibull(self):
         self.check_logp(
-            DiscreteWeibull,
-            Nat,
-            {"q": Unit, "beta": Rplusdunif},
-            discrete_weibull_logpmf,
+            DiscreteWeibull, Nat, {"q": Unit, "beta": Rplusdunif}, discrete_weibull_logpmf
         )
         self.check_selfconsistency_discrete_logcdf(
-            DiscreteWeibull,
-            Nat,
-            {"q": Unit, "beta": Rplusdunif},
+            DiscreteWeibull, Nat, {"q": Unit, "beta": Rplusdunif}
         )
 
     def test_poisson(self):
-        self.check_logp(
-            Poisson,
-            Nat,
-            {"mu": Rplus},
-            lambda value, mu: sp.poisson.logpmf(value, mu),
-        )
+        self.check_logp(Poisson, Nat, {"mu": Rplus}, lambda value, mu: sp.poisson.logpmf(value, mu))
         self.check_logcdf(
-            Poisson,
-            Nat,
-            {"mu": Rplus},
-            lambda value, mu: sp.poisson.logcdf(value, mu),
+            Poisson, Nat, {"mu": Rplus}, lambda value, mu: sp.poisson.logcdf(value, mu)
         )
-        self.check_selfconsistency_discrete_logcdf(
-            Poisson,
-            Nat,
-            {"mu": Rplus},
-        )
+        self.check_selfconsistency_discrete_logcdf(Poisson, Nat, {"mu": Rplus})
 
     @pytest.mark.xfail(reason="Distribution not refactored yet")
     def test_bound_poisson(self):
         NonZeroPoisson = Bound(Poisson, lower=1.0)
         self.check_logp(
-            NonZeroPoisson,
-            PosNat,
-            {"mu": Rplus},
-            lambda value, mu: sp.poisson.logpmf(value, mu),
+            NonZeroPoisson, PosNat, {"mu": Rplus}, lambda value, mu: sp.poisson.logpmf(value, mu)
         )
 
         with Model():
@@ -1682,15 +1574,10 @@ class TestMatchesScipy:
 
     @pytest.mark.xfail(reason="Test has not been refactored")
     @pytest.mark.xfail(
-        condition=(aesara.config.floatX == "float32"),
-        reason="Fails on float32 due to inf issues",
+        condition=(aesara.config.floatX == "float32"), reason="Fails on float32 due to inf issues"
     )
     def test_zeroinflatedpoisson_distribution(self):
-        self.checkd(
-            ZeroInflatedPoisson,
-            Nat,
-            {"theta": Rplus, "psi": Unit},
-        )
+        self.checkd(ZeroInflatedPoisson, Nat, {"theta": Rplus, "psi": Unit})
 
     def test_zeroinflatedpoisson(self):
         def logp_fn(value, psi, theta):
@@ -1702,36 +1589,21 @@ class TestMatchesScipy:
         def logcdf_fn(value, psi, theta):
             return np.log((1 - psi) + psi * sp.poisson.cdf(value, theta))
 
-        self.check_logp(
-            ZeroInflatedPoisson,
-            Nat,
-            {"psi": Unit, "theta": Rplus},
-            logp_fn,
-        )
+        self.check_logp(ZeroInflatedPoisson, Nat, {"psi": Unit, "theta": Rplus}, logp_fn)
 
-        self.check_logcdf(
-            ZeroInflatedPoisson,
-            Nat,
-            {"psi": Unit, "theta": Rplus},
-            logcdf_fn,
-        )
+        self.check_logcdf(ZeroInflatedPoisson, Nat, {"psi": Unit, "theta": Rplus}, logcdf_fn)
 
         self.check_selfconsistency_discrete_logcdf(
-            ZeroInflatedPoisson,
-            Nat,
-            {"theta": Rplus, "psi": Unit},
+            ZeroInflatedPoisson, Nat, {"theta": Rplus, "psi": Unit}
         )
 
     @pytest.mark.xfail(reason="Test not refactored yet")
     @pytest.mark.xfail(
-        condition=(aesara.config.floatX == "float32"),
-        reason="Fails on float32 due to inf issues",
+        condition=(aesara.config.floatX == "float32"), reason="Fails on float32 due to inf issues"
     )
     def test_zeroinflatednegativebinomial_distribution(self):
         self.checkd(
-            ZeroInflatedNegativeBinomial,
-            Nat,
-            {"mu": Rplusbig, "alpha": Rplusbig, "psi": Unit},
+            ZeroInflatedNegativeBinomial, Nat, {"mu": Rplusbig, "alpha": Rplusbig, "psi": Unit}
         )
 
     def test_zeroinflatednegativebinomial(self):
@@ -1770,11 +1642,7 @@ class TestMatchesScipy:
 
     @pytest.mark.xfail(reason="Test not refactored yet")
     def test_zeroinflatedbinomial_distribution(self):
-        self.checkd(
-            ZeroInflatedBinomial,
-            Nat,
-            {"n": NatSmall, "p": Unit, "psi": Unit},
-        )
+        self.checkd(ZeroInflatedBinomial, Nat, {"n": NatSmall, "p": Unit, "psi": Unit})
 
     def test_zeroinflatedbinomial(self):
         def logp_fn(value, psi, n, p):
@@ -1786,12 +1654,7 @@ class TestMatchesScipy:
         def logcdf_fn(value, psi, n, p):
             return np.log((1 - psi) + psi * sp.binom.cdf(value, n, p))
 
-        self.check_logp(
-            ZeroInflatedBinomial,
-            Nat,
-            {"psi": Unit, "n": NatSmall, "p": Unit},
-            logp_fn,
-        )
+        self.check_logp(ZeroInflatedBinomial, Nat, {"psi": Unit, "n": NatSmall, "p": Unit}, logp_fn)
 
         self.check_logcdf(
             ZeroInflatedBinomial,
@@ -1802,10 +1665,7 @@ class TestMatchesScipy:
         )
 
         self.check_selfconsistency_discrete_logcdf(
-            ZeroInflatedBinomial,
-            Nat,
-            {"n": NatSmall, "p": Unit, "psi": Unit},
-            n_samples=10,
+            ZeroInflatedBinomial, Nat, {"n": NatSmall, "p": Unit, "psi": Unit}, n_samples=10
         )
 
     @pytest.mark.parametrize("n", [1, 2, 3])
@@ -1818,10 +1678,7 @@ class TestMatchesScipy:
             extra_args={"size": 5},
         )
         self.check_logp(
-            MvNormal,
-            Vector(R, n),
-            {"mu": Vector(R, n), "tau": PdMatrix(n)},
-            normal_logpdf_tau,
+            MvNormal, Vector(R, n), {"mu": Vector(R, n), "tau": PdMatrix(n)}, normal_logpdf_tau
         )
         self.check_logp(
             MvNormal,
@@ -1831,10 +1688,7 @@ class TestMatchesScipy:
             extra_args={"size": 5},
         )
         self.check_logp(
-            MvNormal,
-            Vector(R, n),
-            {"mu": Vector(R, n), "cov": PdMatrix(n)},
-            normal_logpdf_cov,
+            MvNormal, Vector(R, n), {"mu": Vector(R, n), "cov": PdMatrix(n)}, normal_logpdf_cov
         )
         self.check_logp(
             MvNormal,
@@ -1861,8 +1715,7 @@ class TestMatchesScipy:
         )
 
     @pytest.mark.xfail(
-        condition=(aesara.config.floatX == "float32"),
-        reason="Fails on float32 due to inf issues",
+        condition=(aesara.config.floatX == "float32"), reason="Fails on float32 due to inf issues"
     )
     def test_mvnormal_indef(self):
         cov_val = np.array([[1, 0.5], [0.5, -2]])
@@ -2098,10 +1951,7 @@ class TestMatchesScipy:
 
     def test_dirichlet_2D(self):
         self.check_logp(
-            Dirichlet,
-            MultiSimplex(2, 2),
-            {"a": Vector(Vector(Rplus, 2), 2)},
-            dirichlet_logpdf,
+            Dirichlet, MultiSimplex(2, 2), {"a": Vector(Vector(Rplus, 2), 2)}, dirichlet_logpdf
         )
 
     @pytest.mark.parametrize("n", [2, 3])
@@ -2113,11 +1963,7 @@ class TestMatchesScipy:
     @pytest.mark.skip(reason="Moment calculations have not been refactored yet")
     @pytest.mark.parametrize(
         "p,n",
-        [
-            [[0.25, 0.25, 0.25, 0.25], 1],
-            [[0.3, 0.6, 0.05, 0.05], 2],
-            [[0.3, 0.6, 0.05, 0.05], 10],
-        ],
+        [[[0.25, 0.25, 0.25, 0.25], 1], [[0.3, 0.6, 0.05, 0.05], 2], [[0.3, 0.6, 0.05, 0.05], 10]],
     )
     def test_multinomial_mode(self, p, n):
         _p = np.array(p)
@@ -2141,11 +1987,7 @@ class TestMatchesScipy:
             # [[[.25, .25, .25, .25]], (2, 4), [7, 11]],
             [[[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]], (2, 4), 13],
             [[[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]], (1, 2, 4), [23, 29]],
-            [
-                [[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]],
-                (10, 2, 4),
-                [31, 37],
-            ],
+            [[[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]], (10, 2, 4), [31, 37]],
             [[[0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25]], (2, 4), [17, 19]],
         ],
     )
@@ -2250,14 +2092,22 @@ class TestMatchesScipy:
         logp = at.exp(logpt(dist, value))
         f = aesara.function(inputs=[value], outputs=logp)
         assert_almost_equal(
-            f(vals),
-            np.ones(vals.shape[:-1]),
-            decimal=select_by_precision(float64=6, float32=3),
+            f(vals), np.ones(vals.shape[:-1]), decimal=select_by_precision(float64=6, float32=3)
         )
 
         dist = Multinomial.dist(n=n, p=p, size=2)
         sample = dist.eval()
         assert_allclose(sample, np.stack([vals, vals], axis=0))
+
+    def test_multinomial_zero_probs(self):
+        # test multinomial accepts 0 probabilities / observations:
+        value = aesara.shared(np.array([0, 0, 100], dtype=int))
+        logp = pm.Multinomial.logp(value=value, n=100, p=at.constant([0.0, 0.0, 1.0]))
+        logp_fn = aesara.function(inputs=[], outputs=logp)
+        assert logp_fn() >= 0
+
+        value.set_value(np.array([50, 50, 0], dtype=int))
+        assert np.isneginf(logp_fn())
 
     @pytest.mark.parametrize("n", [2, 3])
     def test_dirichlet_multinomial(self, n):
@@ -2283,11 +2133,7 @@ class TestMatchesScipy:
         dm.tag.value_var = dm_value
         dm_logp = logpt(var=dm, rv_values={dm: dm_value}).eval({dm_value: ns_dm}).ravel()
 
-        assert_almost_equal(
-            dm_logp,
-            bb_logp,
-            decimal=select_by_precision(float64=6, float32=3),
-        )
+        assert_almost_equal(dm_logp, bb_logp, decimal=select_by_precision(float64=6, float32=3))
 
     def test_dirichlet_multinomial_vec(self):
         vals = np.array([[2, 4, 4], [3, 3, 4]])
@@ -2378,9 +2224,7 @@ class TestMatchesScipy:
         dist_logp = logpt(dist, vals).tag.test_value
         expected_logp = np.full(shape=vals.shape[:-1], fill_value=-9.924431e-06)
         assert_almost_equal(
-            dist_logp,
-            expected_logp,
-            decimal=select_by_precision(float64=6, float32=3),
+            dist_logp, expected_logp, decimal=select_by_precision(float64=6, float32=3)
         )
 
         # Samples should be equal given the almost deterministic DM
@@ -2882,17 +2726,8 @@ def test_orderedlogistic_dimensions(shape):
     cutpoints = np.tile(logit(np.linspace(0, 1, 11)[1:-1]), shape + (1,))
     obs = np.random.randint(0, 2, size=(size,) + shape)
     with Model():
-        ol = OrderedLogistic(
-            "ol",
-            eta=np.zeros(shape),
-            cutpoints=cutpoints,
-            observed=obs,
-        )
-        c = Categorical(
-            "c",
-            p=p,
-            observed=obs,
-        )
+        ol = OrderedLogistic("ol", eta=np.zeros(shape), cutpoints=cutpoints, observed=obs)
+        c = Categorical("c", p=p, observed=obs)
     ologp = logpt_sum(ol, np.ones_like(obs)).eval() * loge
     clogp = logpt_sum(c, np.ones_like(obs)).eval() * loge
     expected = -np.prod((size,) + shape)
