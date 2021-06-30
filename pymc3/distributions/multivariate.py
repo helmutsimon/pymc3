@@ -630,8 +630,6 @@ class DirichletMultinomial(Discrete):
         -------
         TensorVariable
         """
-        n = intX(n)
-        a = floatX(a)
         if value.ndim >= 1:
             n = at.shape_padright(n)
             if a.ndim > 1:
