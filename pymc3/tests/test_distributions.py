@@ -2222,11 +2222,15 @@ class TestMatchesScipy:
 
         dist = DirichletMultinomial.dist(n=n, a=a)
 
-        # Logp should be approx -9.924431e-06
-        dist_logp = logpt(dist, vals).tag.test_value
-        expected_logp = np.full(shape=vals.shape[:-1], fill_value=-9.924431e-06)
+        # Logp should be approx -9.98004998e-06
+        value = at.tensor3(dtype="int32")
+        value.tag.test_value = np.zeros_like(vals, dtype="int32")
+        logp = logpt(dist, value)
+        # dist_logp = logpt(dist, vals).tag.test_value
+        f = aesara.function(inputs=[value], outputs=logp)
+        expected_logp = np.full(shape=f(vals).shape, fill_value=-9.98004998e-06)
         assert_almost_equal(
-            dist_logp, expected_logp, decimal=select_by_precision(float64=6, float32=3)
+            f(vals), expected_logp, decimal=select_by_precision(float64=6, float32=3)
         )
 
         # Samples should be equal given the almost deterministic DM
